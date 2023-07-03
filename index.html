@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/css/bootstrap.min.css">
+    
+    <link rel="apple-touch-icon" sizes="180x180" href="favicon/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="favicon/favicon-16x16.png">
+    <link rel="manifest" href="favicon/site.webmanifest">
+    <link rel="mask-icon" href="favicon/safari-pinned-tab.svg" color="#5bbad5">
+    <meta name="msapplication-TileColor" content="#da532c">
+    <meta name="theme-color" content="#ffffff">
+    <title>Todo List</title>
+    <style>
+        .readMore {
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .important:after {
+            content: "";
+            position: absolute;
+            right: 0;
+            top: 0;
+            border-top: 25px solid red;
+            border-bottom: 25px solid transparent;
+            border-left: 25px solid transparent;
+            border-right: 25px solid red;
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="navbar navbar-expand-sm navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="#">iNotes</a>
+            <button class="navbar-toggler d-lg-none" type="button" data-toggle="collapse"
+                data-target="#collapsibleNavId" aria-controls="collapsibleNavId" aria-expanded="false"
+                aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="collapsibleNavId">
+                <ul class="navbar-nav mr-auto mt-2 mt-lg-0">
+                    <li class="nav-item active">
+                        <a class="nav-link" href="#">Home <span class="sr-only">(current)</span></a>
+                    </li>
+                </ul>
+                <form class="form-inline my-2 my-lg-0">
+                    <input class="form-control mr-sm-2" id="searchTxt" type="text" placeholder="Search">
+                </form>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container my-3">
+        <h2>Add Notes</h2>
+        <div class="card">
+            <div class="card-body">
+                <h4>Add Title</h4>
+                <div class="form-group">
+                    <input type="text" class="form-control" name="title" id="addTitle" placeholder="Add Title">
+                </div>
+                <h4>Add Note</h4>
+                <div class="form-group">
+                    <textarea class="form-control" name="desc" id="addDesc" rows="3"
+                        placeholder="Add note description here!" style="resize: vertical;"></textarea>
+                </div>
+                <div class="form-check mb-3">
+                    <label class="form-check-label">
+                        <input type="checkbox" class="form-check-input" name="important" id="important"
+                            value="bg-danger">
+                        Mark as important
+                    </label>
+                </div>
+                <button type="button" class="btn btn-primary" id="addNote">Add Note</button>
+            </div>
+        </div>
+    </div>
+    <div class="container">
+        <h2>Notes</h2>
+        <hr>
+    </div>
+    <div class="container notesSection">
+        <div class="row"></div>
+    </div>
+    <div class="container-fluid bg-dark py-3 mt-5">
+        <div class="text-white text-center">Made with &#10084; by MacTechnical</div>
+    </div>
+
+
+
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script>
+        $('#navId a').click(e => {
+            e.preventDefault();
+            $(this).tab('show');
+        });
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        showNotes();
+        let addNote = document.getElementById('addNote');
+        addNote.addEventListener('click', () => {
+            let addTitle = document.getElementById('addTitle');
+            let addDesc = document.getElementById('addDesc');
+            let isImportant = document.getElementById('important');
+
+            let notes = localStorage.getItem('notes');
+            if (notes == null) {
+                notesObj = [];
+            } else {
+                notesObj = JSON.parse(notes);
+            }
+            if (addTitle.value != "" && addDesc.value != "") {
+                if (isImportant.checked) {
+                    isImportant.value = "important";
+                    isImportant.setAttribute('checked', '')
+                } else {
+                    isImportant.value = "";
+                    isImportant.removeAttribute('checked');
+                }
+                titleText = addTitle.value.toString();
+                titleText = titleText.replaceAll(`'`, `\'`);
+                titleText = titleText.replaceAll(`"`, `\"`);
+                titleText = titleText.replaceAll(`<`, `&lt;`);
+                titleText = titleText.replaceAll(`>`, `&gt;`);
+
+                descText = addDesc.value.toString();
+                descText = descText.replaceAll(`'`, `\'`);
+                descText = descText.replaceAll(`"`, `\"`);
+                descText = descText.replaceAll(`<`, `&lt;`);
+                descText = descText.replaceAll(`>`, `&gt;`);
+
+                let myObj = {
+                    title: titleText,
+                    note: descText,
+                    status: isImportant.value
+                };
+                notesObj.push(myObj);
+                localStorage.setItem('notes', JSON.stringify(notesObj));
+                addTitle.value = "";
+                addDesc.value = "";
+            }
+            isImportant.removeAttribute('checked');
+            showNotes();
+        })
+        function showNotes() {
+            let notes = localStorage.getItem('notes');
+            let noteArea = document.querySelector('.notesSection .row');
+            let noteCols = ``;
+            if (notes == null) {
+                notesObj = [];
+            } else {
+                notesObj = JSON.parse(notes);
+            }
+            notesObj.forEach(function (element, index) {
+                if (element.note.length > 70) {
+                    elemNote = `${element.note.slice(0, 70)}...<span onclick="readMore(${index},'${element.note}')" class="readMore"> Read more</span>`;
+                } else {
+                    elemNote = `${element.note}`;
+                }
+
+                noteCols += `<div class="col-md-4 my-2 noteCol">
+        <div class="card  ${element.status}">
+        <div class="card-body">
+        <h4 class="card-itle noteTitle" id="noteTitle-${index}">${element.title}</h4>
+        <p class="card-text noteDesc" id="note-${index}">` + `
+        
+        ${elemNote}
+        
+        ` + `
+        </p>
+        <button type="button" onclick="deleteNote(${index})" class="btn btn-primary" id="delNote">Delete Note</button>
+        <button type="button" onclick="editNote(${index},'${element.title}','${element.note}')" class="btn btn-primary" id="editNote">Edit Note</button>
+        </div>
+        </div>
+        </div>`;
+            });
+            if (noteCols == "") {
+                noteArea.innerHTML = `<div class="col my-2">
+                                <div class="card">
+                                    <div class="card-body">
+                                        <h4 class="card-itle">No notes available. Please add a Note.</h4>
+                                    </div>
+                                </div>
+                            </div>`;
+            } else {
+                noteArea.innerHTML = noteCols;
+            }
+        }
+
+
+
+        function readMore(id, text) {
+            let noteDesc = document.getElementById(`note-${id}`);
+            noteDesc.innerText = text;
+        }
+
+
+
+
+        function deleteNote(id) {
+            let notes = localStorage.getItem('notes');
+            if (notes == null) {
+                notesObj = [];
+            } else {
+                notesObj = JSON.parse(notes);
+            }
+            notesObj.splice(id, 1);
+            localStorage.setItem('notes', JSON.stringify(notesObj));
+            showNotes();
+        }
+        let search = document.getElementById('searchTxt');
+        search.addEventListener('input', () => {
+            let inputVal = search.value;
+            inputVal = inputVal.toLowerCase();
+            let noteCard = document.getElementsByClassName('noteCol');
+            Array.from(noteCard).forEach(element => {
+                let titleText = element.querySelector('.noteTitle').innerText;
+                let noteText = element.querySelector('.noteDesc').innerText;
+                titleText = titleText.toLowerCase();
+                noteText = noteText.toLowerCase();
+                if (titleText.includes(inputVal) || noteText.includes(inputVal)) {
+                    element.style.display = "block";
+                } else {
+                    element.style.display = "none";
+                }
+            });
+        })
+        function editNote(id, title, note) {
+            let titleText = document.getElementById(`noteTitle-${id}`);
+            let noteText = document.getElementById(`note-${id}`);
+
+            titleText.innerHTML = `<input type="text" class="form-control" name="title" id="editTitle" value="${title}">`;
+            noteText.innerHTML = `<textarea class="form-control" name="desc" rows="3" style="resize: vertical;">${note}</textarea>`;
+
+            let input = titleText.getElementsByTagName('input');
+            let textarea = noteText.getElementsByTagName('textarea');
+            input[0].addEventListener('blur', () => {
+                let newTitle = input[0].value;
+                titleText.innerHTML = newTitle;
+                let notes = localStorage.getItem('notes');
+                notesObj = JSON.parse(notes);
+                notesObj[id].title = newTitle;
+                localStorage.setItem('notes', JSON.stringify(notesObj));
+            });
+            textarea[0].addEventListener('blur', () => {
+                let newNote = textarea[0].value;
+                noteText.innerHTML = newNote;
+                let notes = localStorage.getItem('notes');
+                notesObj = JSON.parse(notes);
+                notesObj[id].note = newNote;
+                localStorage.setItem('notes', JSON.stringify(notesObj));
+            });
+        }
+
+    </script>
+
+</body>
+
+</html>
